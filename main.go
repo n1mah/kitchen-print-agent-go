@@ -22,19 +22,24 @@ type Order struct {
 
 type PrintRequest struct {
 	PrinterIP string `json:"printerIp"`
+	StoreName string `json:"storeName"`
 	Order     Order  `json:"order"`
 }
 
 const printerPort = "9100"
 
-func buildReceipt(order Order) string {
+func buildReceipt(storeName string, order Order) string {
 	esc := "\x1b"
 	gs := "\x1d"
+
+	if storeName == "" {
+		storeName = "سفارش"
+	}
 
 	receipt := esc + "@"
 	receipt += esc + "a" + "\x01"
 	receipt += gs + "!" + "\x11"
-	receipt += "سفارش\n"
+	receipt += storeName + "\n"
 	receipt += gs + "!" + "\x00"
 	receipt += "--------------------------------\n"
 	receipt += esc + "a" + "\x00"
@@ -81,7 +86,7 @@ func main() {
 			return
 		}
 
-		receipt := buildReceipt(req.Order)
+		receipt := buildReceipt(req.StoreName, req.Order)
 
 		err = sendToPrinter(req.PrinterIP, receipt)
 		if err != nil {
